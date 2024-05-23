@@ -1,10 +1,17 @@
 import express from "express";
 import mongoose from "mongoose";
-import { connectDB } from "./config/db.js";
+import { connectDB } from "./src/config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
+import cookieParser from "cookie-parser";
+
+import authRoutes from "./src/routes/authRoutes.js"
+import itemRoutes from "./src/routes/itemRoutes.js"
+import swapRoutes from "./src/routes/swapRoutes.js"
+import chatRoutes from "./src/routes/chatRoutes.js"
+import userRoutes from "./src/routes/userRoutes.js"
 
 // Initialize dotenv
 dotenv.config();
@@ -24,16 +31,12 @@ app.use(helmet()); // Adds security headers
 app.use(cors()); // Enable CORS
 app.use(express.json()); // For parsing application/json
 
-// Define a simple route for testing
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  res.status(500).send("Something broke!");
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/swaps', swapRoutes);
+app.use('/api/chats', chatRoutes);
+app.use('/api/users', userRoutes);
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -7,19 +7,12 @@ dotenv.config();
 // Connect to the database
 const connectDB = async () => {
   try {
-    // Configuration options for the database connection
-    const connOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
-    };
 
     // Database URI imported from env variables
     const dbURI = process.env.MONGO_URI;
 
     // Establishing the database connection
-    const conn = await mongoose.connect(dbURI, connOptions);
+    const conn = await mongoose.connect(dbURI);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

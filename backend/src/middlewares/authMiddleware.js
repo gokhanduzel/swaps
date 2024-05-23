@@ -2,16 +2,16 @@ import jwt from 'jsonwebtoken';
 import User from '../models/UserModel.js';
 import asyncHandler from 'express-async-handler';
 
-const protect = asyncHandler(async (req, res, next) => {
+const authenticate = asyncHandler(async (req, res, next) => {
     let token;
 
-    if (req.cookies && req.cookies.token) {
+    if (req.cookies && req.cookies['accessToken']) {
         try {
             // Extract the token from cookies
-            token = req.cookies.token;
+            token = req.cookies['accessToken'];
 
             // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
             // Get user from the token
             req.user = await User.findById(decoded.id).select('-passwordHash');
@@ -27,4 +27,4 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-export { protect };
+export { authenticate };

@@ -20,10 +20,9 @@ const itemSchema = new mongoose.Schema({
         required: true
     },
     desiredItems: [String], // Optional list of desired item types/categories
-    status: {
-        type: String,
-        default: 'available', // Other values can be 'swapped' or 'unavailable'
-        required: true
+    visible: {
+        type: Boolean,
+        default: true
     }
 }, { timestamps: true });
 
