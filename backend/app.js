@@ -24,11 +24,14 @@ const app = express();
 app.use(cookieParser());
 
 // Use pinoHttp for logging
-app.use(pinoHttp());
+
 
 // Middleware for security and body parsing
 app.use(helmet()); // Adds security headers
-app.use(cors()); // Enable CORS
+app.use(cors({
+    origin: 'http://localhost:5173', // replace with your application's origin
+    credentials: true
+  }));
 app.use(express.json()); // For parsing application/json
 
 app.use('/api/auth', authRoutes);
