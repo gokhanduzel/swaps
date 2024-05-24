@@ -4,14 +4,14 @@ import asyncHandler from "express-async-handler";
 
 // Create a new item
 export const createItem = asyncHandler(async (req, res) => {
-  const { title, description, images, category, desiredItems, visible } =
+  const { title, description, images, tags, desiredItems, visible } =
     req.body;
   const item = new Item({
     ownerId: req.user._id,
     title,
     description,
     images,
-    category,
+    tags,
     desiredItems,
     visible,
   });
@@ -43,7 +43,7 @@ export const getItem = asyncHandler(async (req, res) => {
 
 // Update an item by ID
 export const updateItem = asyncHandler(async (req, res) => {
-  const { title, description, images, category, desiredItems, visible } =
+  const { title, description, images, tags, desiredItems, visible } =
     req.body;
   const item = await Item.findById(req.params.id);
 
@@ -51,7 +51,7 @@ export const updateItem = asyncHandler(async (req, res) => {
     item.title = title;
     item.description = description;
     item.images = images;
-    item.category = category;
+    item.tags = tags;
     item.desiredItems = desiredItems;
     item.visible = visible;
 

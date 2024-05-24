@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 axios.defaults.withCredentials = true;
-const BASE_URL = "http://localhost:5001/api";
+const BASE_URL = "http://localhost:5001/api/auth";
 
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/auth/login`, {
+      const response = await axios.post(`${BASE_URL}/login`, {
         email,
         password,
       });
@@ -23,7 +23,7 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post(`${BASE_URL}/auth/logout`);
+      await axios.post(`${BASE_URL}/logout`);
       return;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -35,7 +35,7 @@ export const register = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/auth/register`, userData);
+      const response = await axios.post(`${BASE_URL}/register`, userData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -47,7 +47,7 @@ export const refresh = createAsyncThunk(
   "auth/refresh",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/auth/refresh`);
+      const response = await axios.post(`${BASE_URL}/refresh`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);

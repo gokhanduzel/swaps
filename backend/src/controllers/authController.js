@@ -13,11 +13,17 @@ const generateRefreshToken = (user) => {
 // Register User
 export const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
     if (userExists) {
-        res.status(400);
-        throw new Error('User already exists');
+        if (userExists.email === email) {
+            res.status(400).json({ message: 'Email already in use' });
+            return;
+        }
+        if (userExists.username === username) {
+            res.status(400).json({ message: 'Username already in use' });
+            return;
+        }
     }
 
     const user = await User.create({
