@@ -1,8 +1,6 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
-import "./App.css";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
@@ -18,6 +16,14 @@ import { PersistGate } from "redux-persist/integration/react";
 
 function App() {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(refresh());
+    }, 840000); // 15 minutes
+
+    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+  }, [dispatch]);
 
   return (
     <PersistGate loading={null} persistor={persistor}>
