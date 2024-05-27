@@ -14,7 +14,7 @@ const itemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    images: [String], // Array of image URLs
+    // images: [String], // Array of image URLs
     tags: [String], // Optional list of tags
     desiredItems: [String], // Optional list of desired item types/categories
     visible: {

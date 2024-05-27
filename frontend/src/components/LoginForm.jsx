@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login } from "../features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,6 +16,7 @@ const LoginForm = () => {
       if (login.fulfilled.match(resultAction)) {
         // Login was successful
         alert("Logged in successfully");
+        navigate("/");
       } else {
         // Login failed
         console.log(resultAction);

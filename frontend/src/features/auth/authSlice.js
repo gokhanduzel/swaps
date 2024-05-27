@@ -55,10 +55,24 @@ export const refresh = createAsyncThunk(
   }
 );
 
+export const checkAuth = createAsyncThunk(
+  "auth/checkAuth",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/checkauth`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const initialState = {
+  isAuthenticated: false, // Boolean if user is authenticated
   user: null, // User object
   status: "idle", // Status of the async request
   error: null, // Error message
+  loading: false,
 };
 
 const authSlice = createSlice({
@@ -73,6 +87,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.user = action.payload;
+        state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = "failed";
@@ -84,6 +99,7 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.status = "idle";
         state.user = null;
+        state.isAuthenticated = false;
       })
       .addCase(logout.rejected, (state, action) => {
         state.status = "failed";
@@ -95,6 +111,7 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.user = action.payload;
+        state.isAuthenticated = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.status = "failed";
@@ -110,6 +127,22 @@ const authSlice = createSlice({
       .addCase(refresh.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+      .addCase(checkAuth.pending, (state) => {
+        state.status = "loading";
+        state.loading = true;
+      })
+      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload.user;
+        state.loading = false;
+        state.isAuthenticated = true;
+      })
+      .addCase(checkAuth.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+        state.loading = false;
+        state.isAuthenticated = false;
       });
   },
 });

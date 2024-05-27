@@ -8,7 +8,7 @@ export const createItem = createAsyncThunk(
   "items/createItem",
   async (itemData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`BASE_URL/createitem`, itemData);
+      const response = await axios.post(`${BASE_URL}/createitem`, itemData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -28,11 +28,35 @@ export const getItems = createAsyncThunk(
   }
 );
 
+export const getVisibleItems = createAsyncThunk(
+  "items/getVisibleItems",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getvisibleitems`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const getItem = createAsyncThunk(
   "items/getItem",
   async (itemId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/getitem/${itemId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const getItemsByUser = createAsyncThunk(
+  "items/getItemsByUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getitemsbyuser/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -68,9 +92,11 @@ export const deleteItem = createAsyncThunk(
 );
 
 const initialState = {
-  items: [],
-  status: "idle",
-  error: null,
+  allItems: [], // array of all items
+  visibleItems: [], // array of visible items
+  userItems: [], // array of items belonging to the user
+  status: "idle", // status of the last dispatched action
+  error: null, // error from the last dispatched action
 };
 
 const itemSlice = createSlice({
@@ -83,7 +109,11 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(createItem.fulfilled, (state, action) => {
-        state.items.push(action.payload);
+        state.allItems.push(action.payload);
+        state.userItems.push(action.payload);
+        if (action.payload.visible) {
+          state.visibleItems.push(action.payload);
+        }
         state.status = "succeeded";
       })
       .addCase(createItem.rejected, (state, action) => {
@@ -94,10 +124,21 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(getItems.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.allItems = action.payload;
         state.status = "succeeded";
       })
       .addCase(getItems.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getVisibleItems.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getVisibleItems.fulfilled, (state, action) => {
+        state.visibleItems = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(getVisibleItems.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
@@ -105,10 +146,21 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(getItem.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.allItems = action.payload;
         state.status = "succeeded";
       })
       .addCase(getItem.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getItemsByUser.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getItemsByUser.fulfilled, (state, action) => {
+        state.userItems = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(getItemsByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
@@ -116,9 +168,25 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(updateItem.fulfilled, (state, action) => {
-        state.items = state.items.map((item) =>
-          item._id === action.payload._id ? action.payload : item
+        const updateItems = (items, check) =>
+          items.map((item) =>
+            item._id === action.payload._id
+              ? check(item)
+                ? action.payload
+                : item
+              : item
+          );
+
+        state.allItems = updateItems(state.allItems, () => true);
+        state.visibleItems = updateItems(
+          state.visibleItems,
+          (item) => item.visible
         );
+        state.userItems = updateItems(
+          state.userItems,
+          (item) => item.userId === currentUser.id
+        );
+
         state.status = "succeeded";
       })
       .addCase(updateItem.rejected, (state, action) => {
@@ -129,9 +197,21 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(deleteItem.fulfilled, (state, action) => {
-        state.items = state.items.filter(
-          (item) => item._id !== action.payload._id
+        const deleteItemFrom = (items, check) =>
+          items.filter(
+            (item) => item._id !== action.payload._id || !check(item)
+          );
+
+        state.allItems = deleteItemFrom(state.allItems, () => true);
+        state.visibleItems = deleteItemFrom(
+          state.visibleItems,
+          (item) => item.visible
         );
+        state.userItems = deleteItemFrom(
+          state.userItems,
+          (item) => item.userId === currentUser.id
+        );
+
         state.status = "succeeded";
       })
       .addCase(deleteItem.rejected, (state, action) => {

@@ -4,25 +4,58 @@ import asyncHandler from "express-async-handler";
 
 // Create a new item
 export const createItem = asyncHandler(async (req, res) => {
-  const { title, description, images, tags, desiredItems, visible } =
-    req.body;
+  const { title, description, tags, desiredItems, visible } = req.body;
+
+  // Data validation
+  if (
+    !title ||
+    !description ||
+    !tags ||
+    !desiredItems ||
+    visible === undefined
+  ) {
+    res.status(400);
+    throw new Error("Missing required fields");
+  }
+
   const item = new Item({
     ownerId: req.user._id,
     title,
     description,
-    images,
     tags,
     desiredItems,
     visible,
   });
 
-  const createdItem = await item.save();
+  let createdItem;
+  try {
+    console.log(item); // Add this line
+    createdItem = await item.save();
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+    throw new Error("Failed to create item");
+  }
 
-  await User.findByIdAndUpdate(req.user._id, {
-    $push: { itemsPosted: createdItem._id },
+  let updatedUser;
+  try {
+    updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $push: { itemsPosted: createdItem._id },
+      },
+      { new: true }
+    ); // Return the updated user
+  } catch (error) {
+    res.status(500);
+    throw new Error("Failed to update user");
+  }
+
+  res.status(201).json({
+    message: "Item created successfully",
+    item: createdItem,
+    user: updatedUser,
   });
-
-  res.status(201).json(createdItem);
 });
 
 // Get all items
@@ -41,16 +74,34 @@ export const getItem = asyncHandler(async (req, res) => {
   }
 });
 
+// Get all items with visible set to true
+export const getVisibleItems = asyncHandler(async (req, res) => {
+  const items = await Item.find({ visible: true });
+  if (!items) {
+    res.status(404).json({ message: "No items found" });
+    return;
+  }
+  res.json(items);
+});
+
+// Get all items posted by a user
+export const getItemsByUser = asyncHandler(async (req, res) => {
+  const items = await Item.find({ ownerId: req.params.id });
+  if (!items) {
+    res.status(404).json({ message: "No items found" });
+    return;
+  }
+  res.json(items);
+});
+
 // Update an item by ID
 export const updateItem = asyncHandler(async (req, res) => {
-  const { title, description, images, tags, desiredItems, visible } =
-    req.body;
+  const { title, description, tags, desiredItems, visible } = req.body;
   const item = await Item.findById(req.params.id);
 
   if (item) {
     item.title = title;
     item.description = description;
-    item.images = images;
     item.tags = tags;
     item.desiredItems = desiredItems;
     item.visible = visible;

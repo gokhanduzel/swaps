@@ -3,8 +3,10 @@ import {
   registerUser,
   loginUser,
   logoutUser,
-  refreshToken
+  refreshToken,
+  checkAuth
 } from '../controllers/authController.js';
+import { authenticate } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -19,5 +21,8 @@ router.post('/logout', logoutUser);
 
 // Refresh the access token using a refresh token
 router.post('/refresh', refreshToken);
+
+// Check if the user is authenticated
+router.get('/checkauth', authenticate, checkAuth);
 
 export default router;

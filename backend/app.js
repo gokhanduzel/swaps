@@ -24,6 +24,7 @@ const app = express();
 app.use(cookieParser());
 
 // Use pinoHttp for logging
+app.use(pinoHttp());
 
 
 // Middleware for security and body parsing
