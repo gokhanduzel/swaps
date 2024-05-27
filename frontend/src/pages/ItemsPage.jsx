@@ -7,6 +7,8 @@ import { getVisibleItems } from "../features/item/itemSlice";
 const ItemsPage = () => {
   const dispatch = useDispatch();
   const items = useSelector((state) => state.item.visibleItems);
+  console.log("Items:", items);
+  const userId = useSelector((state) => state.auth.user?.user?._id);
 
   useEffect(() => {
     dispatch(getVisibleItems());
@@ -22,6 +24,9 @@ const ItemsPage = () => {
               <ItemCard
                 key={item._id}
                 item={item}
+                isProfilePage={false}
+                userId={userId}
+                ownerId={item.ownerId}
               />
             ))
           ) : (

@@ -88,6 +88,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.user = action.payload;
         state.isAuthenticated = true;
+        console.log("User data set:", action.payload);
       })
       .addCase(login.rejected, (state, action) => {
         state.status = "failed";

@@ -57,6 +57,7 @@ export const getItemsByUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${BASE_URL}/getitemsbyuser/${userId}`);
+      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
