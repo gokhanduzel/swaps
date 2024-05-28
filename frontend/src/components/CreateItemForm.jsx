@@ -34,6 +34,10 @@ const CreateItemForm = () => {
       console.log(response);
       if (createItem.fulfilled.match(response)) {
         alert("Item created successfully");
+        setTitle("");
+        setDescription("");
+        setTags([]);
+        setDesiredItems([]);
       } else {
         console.log(response);
         if (response.payload && response.payload !== undefined) {

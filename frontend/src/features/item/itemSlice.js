@@ -85,7 +85,7 @@ export const deleteItem = createAsyncThunk(
   async (itemId, { rejectWithValue }) => {
     try {
       const response = await axios.delete(`${BASE_URL}/deleteitem/${itemId}`);
-      return response.data;
+      return { itemId, ...response.data };
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -185,7 +185,7 @@ const itemSlice = createSlice({
         );
         state.userItems = updateItems(
           state.userItems,
-          (item) => item.userId === currentUser.id
+          (item) => item.userId
         );
 
         state.status = "succeeded";
@@ -198,21 +198,16 @@ const itemSlice = createSlice({
         state.status = "loading";
       })
       .addCase(deleteItem.fulfilled, (state, action) => {
-        const deleteItemFrom = (items, check) =>
-          items.filter(
-            (item) => item._id !== action.payload._id || !check(item)
-          );
-
-        state.allItems = deleteItemFrom(state.allItems, () => true);
-        state.visibleItems = deleteItemFrom(
-          state.visibleItems,
-          (item) => item.visible
+        const itemId = action.payload.itemId;
+        state.allItems = state.allItems.filter(
+          (item) => item._id !== itemId
         );
-        state.userItems = deleteItemFrom(
-          state.userItems,
-          (item) => item.userId === currentUser.id
+        state.visibleItems = state.visibleItems.filter(
+          (item) => item._id !== itemId
         );
-
+        state.userItems = state.userItems.filter(
+          (item) => item._id !== itemId
+        );
         state.status = "succeeded";
       })
       .addCase(deleteItem.rejected, (state, action) => {

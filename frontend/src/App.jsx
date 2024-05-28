@@ -1,6 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
@@ -13,20 +11,12 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { persistor } from "./app/store";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { PersistGate } from "redux-persist/integration/react";
+import TokenRefresher from "./components/TokenRefresher";
 
 function App() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch(refresh());
-    }, 840000); // 15 minutes
-
-    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
-  }, [dispatch]);
-
   return (
     <PersistGate loading={null} persistor={persistor}>
+      <TokenRefresher />
       <BrowserRouter>
         <Navbar />
         <Routes>
@@ -41,14 +31,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/swaps"
-            element={
-              <ProtectedRoute>
-                <ItemsPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/swaps" element={<ItemsPage />} />
           <Route
             path="/profile"
             element={

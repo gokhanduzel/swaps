@@ -47,8 +47,8 @@ export const refresh = createAsyncThunk(
   "auth/refresh",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/refresh`);
-      return response.data;
+      await axios.post(`${BASE_URL}/refresh`);
+      return null; // Return null as the token is stored in HTTP-only cookies
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -123,7 +123,6 @@ const authSlice = createSlice({
       })
       .addCase(refresh.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = action.payload;
       })
       .addCase(refresh.rejected, (state, action) => {
         state.status = "failed";

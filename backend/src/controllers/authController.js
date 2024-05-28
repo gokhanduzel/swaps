@@ -113,7 +113,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 900000, // 15 minutes
     });
-    res.json({ token: newAccessToken }); // Provide a new access token
+    res.status(200).json({ message: "Token refreshed" });
   } catch (error) {
     res.status(403).json({ message: "Invalid token" });
   }

@@ -1,6 +1,7 @@
 import Item from "../models/ItemModel.js";
 import User from "../models/UserModel.js";
 import asyncHandler from "express-async-handler";
+import mongoose from "mongoose";
 
 // Create a new item
 export const createItem = asyncHandler(async (req, res) => {
@@ -115,24 +116,32 @@ export const updateItem = asyncHandler(async (req, res) => {
 
 // Delete an item by ID
 export const deleteItem = asyncHandler(async (req, res) => {
-  const item = await Item.findById(req.params.id);
+  try {
+    const item = await Item.findById(req.params.id);
 
-  if (!item) {
-    res.status(404).json({ message: "Item not found" });
-    return;
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    // Check if the logged-in user is the owner of the item
+    if (item.ownerId.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: "User not authorized" });
+    }
+
+    await Item.findByIdAndDelete(req.params.id);
+
+    // After deleting the item, remove it from the user's itemsPosted array
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { itemsPosted: new mongoose.Types.ObjectId(req.params.id) },
+    });
+
+    res
+      .status(200)
+      .json({ message: "Item deleted successfully", itemId: req.params.id });
+  } catch (error) {
+    console.error("Error deleting item:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
-
-  // Check if the logged-in user is the owner of the item
-  if (item.ownerId.toString() !== req.user._id.toString()) {
-    res.status(401).json({ message: "User not authorized" });
-    return;
-  }
-
-  await Item.findByIdAndDelete(req.params.id);
-  // After deleting the item, remove it from the user's itemsPosted array
-  await User.findByIdAndUpdate(req.user._id, {
-    $pull: { itemsPosted: req.params.id },
-  });
-
-  res.status(200).json({ message: "Item deleted successfully" });
 });
