@@ -2,19 +2,27 @@ import Item from "../models/ItemModel.js";
 import User from "../models/UserModel.js";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
+import { s3Client } from '../config/awsConfig.js';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+
+// Function to delete an image from S3
+const deleteImageFromS3 = async (url) => {
+  const key = url.split("/").pop();
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+    })
+  );
+};
 
 // Create a new item
 export const createItem = asyncHandler(async (req, res) => {
   const { title, description, tags, desiredItems, visible } = req.body;
+  const images = req.body.images || []; // URLs from S3
 
   // Data validation
-  if (
-    !title ||
-    !description ||
-    !tags ||
-    !desiredItems ||
-    visible === undefined
-  ) {
+  if (!title || !description || !tags || visible === undefined) {
     res.status(400);
     throw new Error("Missing required fields");
   }
@@ -23,40 +31,28 @@ export const createItem = asyncHandler(async (req, res) => {
     ownerId: req.user._id,
     title,
     description,
+    images,
     tags,
     desiredItems,
     visible,
   });
 
-  let createdItem;
   try {
-    console.log(item); // Add this line
-    createdItem = await item.save();
+    const createdItem = await item.save();
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $push: { itemsPosted: createdItem._id } },
+      { new: true }
+    );
+    res.status(201).json({
+      message: "Item created successfully",
+      item: createdItem,
+    });
   } catch (error) {
     console.error(error);
     res.status(500);
     throw new Error("Failed to create item");
   }
-
-  let updatedUser;
-  try {
-    updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $push: { itemsPosted: createdItem._id },
-      },
-      { new: true }
-    ); // Return the updated user
-  } catch (error) {
-    res.status(500);
-    throw new Error("Failed to update user");
-  }
-
-  res.status(201).json({
-    message: "Item created successfully",
-    item: createdItem,
-    user: updatedUser,
-  });
 });
 
 // Get all items
@@ -97,21 +93,43 @@ export const getItemsByUser = asyncHandler(async (req, res) => {
 
 // Update an item by ID
 export const updateItem = asyncHandler(async (req, res) => {
-  const { title, description, tags, desiredItems, visible } = req.body;
+  const { title, description, tags, desiredItems, visible, removeImages } = req.body;
   const item = await Item.findById(req.params.id);
 
-  if (item) {
-    item.title = title;
-    item.description = description;
-    item.tags = tags;
-    item.desiredItems = desiredItems;
-    item.visible = visible;
-
-    const updatedItem = await item.save();
-    res.json(updatedItem);
-  } else {
+  if (!item) {
     res.status(404).json({ message: "Item not found" });
+    return;
   }
+
+  // Check if the user is the owner of the item
+  if (item.ownerId.toString() !== req.user._id.toString()) {
+    res.status(401).json({ message: "Not authorized to update this item" });
+    return;
+  }
+
+  // Update item details
+  item.title = title || item.title;
+  item.description = description || item.description;
+  item.tags = tags || item.tags;
+  item.desiredItems = desiredItems || item.desiredItems;
+  item.visible = visible !== undefined ? visible : item.visible;
+
+  // Remove selected images
+  if (removeImages && removeImages.length > 0) {
+    for (const url of removeImages) {
+      await deleteImageFromS3(url); // Delete image from S3
+      item.images = item.images.filter((image) => image !== url); // Remove URL from MongoDB
+    }
+  }
+
+  // Add new images
+  if (req.body.images && req.body.images.length > 0) {
+    const newImages = req.body.images; // URLs from S3
+    item.images.push(...newImages); // Add URLs to MongoDB
+  }
+
+  const updatedItem = await item.save(); // Save the updated item
+  res.status(200).json(updatedItem); // Respond with the updated item
 });
 
 // Delete an item by ID
@@ -126,6 +144,11 @@ export const deleteItem = asyncHandler(async (req, res) => {
     // Check if the logged-in user is the owner of the item
     if (item.ownerId.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: "User not authorized" });
+    }
+
+    // Delete images from S3
+    for (const url of item.images) {
+      await deleteImageFromS3(url);
     }
 
     await Item.findByIdAndDelete(req.params.id);

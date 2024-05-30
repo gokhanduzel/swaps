@@ -9,19 +9,18 @@ import {
   deleteItem,
 } from "../controllers/itemController.js";
 import { authenticate } from '../middlewares/authMiddleware.js';
+import { upload, uploadFilesMiddleware } from '../middlewares/upload.js';
 
 const router = express.Router();
 
-
 // Route to create a new item
-router.post("/createitem", authenticate, createItem);
+router.post("/createitem", authenticate, upload.array('images', 5), uploadFilesMiddleware, createItem);
 
 // Route to update an item by ID
-router.put("/updateitem/:id", authenticate, updateItem);
+router.put("/updateitem/:id", authenticate, upload.array('images', 5), uploadFilesMiddleware, updateItem);
 
 // Route to delete an item by ID
 router.delete("/deleteitem/:id", authenticate, deleteItem);
-
 
 // Route to get all items
 router.get("/getitems", getItems);
@@ -34,10 +33,5 @@ router.get("/getitem/:id", authenticate, getItem);
 
 // Route to get all items posted by a user
 router.get("/getitemsbyuser/:id", authenticate, getItemsByUser);
-
-
-
-
-
 
 export default router;

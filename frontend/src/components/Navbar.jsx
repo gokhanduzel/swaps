@@ -31,7 +31,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`bg-gray-800 text-white p-4 inset-x-0 fixed top-0 transition-all duration-200 ${
+        className={`bg-gray-800 text-white p-4 inset-x-0 fixed top-0 transition-all duration-200 z-20 ${
           visible ? "translate-y-0" : "-translate-y-full"
         }`}
       >

@@ -23,8 +23,17 @@ const swapSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: 'pending', // Other statuses can be 'accepted', 'rejected'
+        default: 'pending', // pending, accepted, declined
         required: true
+    },
+    message: {
+        type: String,
+        required: true
+    },
+    chatId: { // Linking the swap to a chat document when the swap is accepted
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Chat',
+        required: false // Only required after a swap is accepted
     }
 }, { timestamps: true });
 

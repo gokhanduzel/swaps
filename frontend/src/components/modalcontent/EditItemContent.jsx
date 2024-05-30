@@ -10,6 +10,8 @@ const EditItemContent = ({ item, onSave, onClose }) => {
     tags: item.tags.join(","),
     desiredItems: item.desiredItems.join(","),
     visible: item.visible,
+    removeImages: [],
+    newImages: [],
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -23,16 +25,33 @@ const EditItemContent = ({ item, onSave, onClose }) => {
     });
   };
 
+  const handleRemoveImage = (url) => {
+    setFormData({
+      ...formData,
+      removeImages: [...formData.removeImages, url],
+    });
+  };
+
+  const handleNewImages = (e) => {
+    setFormData({
+      ...formData,
+      newImages: Array.from(e.target.files),
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const data = {
-      ...formData,
-      tags: formData.tags.split(","),
-      desiredItems: formData.desiredItems.split(","),
-    };
+    const data = new FormData();
+    data.append("title", formData.title);
+    data.append("description", formData.description);
+    data.append("tags", formData.tags);
+    data.append("desiredItems", formData.desiredItems);
+    data.append("visible", formData.visible);
+    formData.removeImages.forEach((url) => data.append("removeImages", url));
+    formData.newImages.forEach((file) => data.append("images", file));
 
     try {
       const response = await dispatch(
@@ -110,7 +129,33 @@ const EditItemContent = ({ item, onSave, onClose }) => {
           className="ml-2"
         />
       </div>
-
+      <div>
+        <label className="block text-gray-700">Current Images:</label>
+        <div className="grid grid-cols-3 gap-4">
+          {item.images.map((image, index) => (
+            <div key={index} className="relative">
+              <img src={image} alt={`Image ${index + 1}`} className="w-full" />
+              <button
+                type="button"
+                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                onClick={() => handleRemoveImage(image)}
+              >
+                X
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-gray-700">Add New Images:</label>
+        <input
+          type="file"
+          name="images"
+          onChange={handleNewImages}
+          multiple
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
       {error && <p className="text-red-500">{error}</p>}
       <button
         type="submit"

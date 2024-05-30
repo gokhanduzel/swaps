@@ -1,0 +1,19 @@
+/* carousel-custom.css */
+.carousel .control-arrow {
+    @apply bg-black bg-opacity-50 w-12 h-12; /* Tailwind utility classes */
+  }
+  
+  .carousel .control-next.control-arrow:before,
+  .carousel .control-prev.control-arrow:before {
+    @apply text-white; /* Tailwind utility classes */
+    font-size: 2rem; /* Additional custom style */
+  }
+  
+  .carousel .control-next.control-arrow {
+    right: 3.75rem; /* Adjusted for Tailwind */
+  }
+  
+  .carousel .control-prev.control-arrow {
+    left: 3.75rem; /* Adjusted for Tailwind */
+  }
+  

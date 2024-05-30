@@ -6,40 +6,53 @@ const CreateItemForm = () => {
   const dispatch = useDispatch();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  // const [images, setImages] = useState([]);
   const [tags, setTags] = useState([]);
   const [desiredItems, setDesiredItems] = useState([]);
   const [visible, setVisible] = useState(true);
+  const [images, setImages] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages([...images, ...files.map(file => URL.createObjectURL(file))]);
+    setImageFiles([...imageFiles, ...files]);
+  };
+
+  const handleRemoveImage = (url) => {
+    const index = images.indexOf(url);
+    if (index > -1) {
+      setImages(images.filter((_, i) => i !== index));
+      setImageFiles(imageFiles.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-  
-    const form = e.target;
-    const data = {
-      title: form.title.value,
-      description: form.description.value,
-      desiredItems: form.desiredItems.value.split(","),
-      tags: form.tags.value.split(","),
-      visible: form.visible.checked, 
-    };
-  
-    console.log(data);
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('tags', tags.join(','));
+    formData.append('desiredItems', desiredItems.join(','));
+    formData.append('visible', visible);
+    imageFiles.forEach(file => formData.append('images', file));
+
     try {
-      const response = await dispatch(createItem(data));
+      const response = await dispatch(createItem(formData));
       setIsLoading(false);
-      console.log(response);
       if (createItem.fulfilled.match(response)) {
         alert("Item created successfully");
         setTitle("");
         setDescription("");
         setTags([]);
         setDesiredItems([]);
+        setImages([]);
+        setImageFiles([]);
       } else {
-        console.log(response);
         if (response.payload && response.payload !== undefined) {
           alert(`Item creation failed: ${response.payload.message}`);
         } else {
@@ -51,7 +64,6 @@ const CreateItemForm = () => {
       setIsLoading(false);
     }
   }
-  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -88,7 +100,7 @@ const CreateItemForm = () => {
             onChange={(e) => setDescription(e.target.value)}
           ></textarea>
         </div>
-        {/* <div className="mb-4">
+        <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="images"
@@ -100,11 +112,24 @@ const CreateItemForm = () => {
             type="file"
             id="images"
             name="images"
-            value={images}
             multiple
-            onChange={(e) => setImages(Array.from(e.target.files))}
+            onChange={handleImageChange}
           />
-        </div> */}
+          <div className="image-preview mt-4">
+            {images.map((url, index) => (
+              <div key={index} className="image-container relative inline-block">
+                <img src={url} alt={`Preview ${index}`} className="w-24 h-24 object-cover" />
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1"
+                  onClick={() => handleRemoveImage(url)}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
