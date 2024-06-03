@@ -9,8 +9,8 @@ const ProfilePage = () => {
   const dispatch = useDispatch();
   const items = useSelector((state) => state.item.userItems);
   const swaps = useSelector((state) => state.swaps.swaps);
-  console.log(swaps)
-  const user = useSelector((state) => state.auth.user?.user); 
+  console.log(swaps);
+  const user = useSelector((state) => state.auth.user?.user);
   const userId = user?._id;
 
   useEffect(() => {
@@ -38,11 +38,24 @@ const ProfilePage = () => {
   };
 
   return (
-    <section>
+    <section className="pt-40">
       <div className="container mx-auto">
-      {user.username && <h1 className="text-3xl font-bold my-8">{user.username}'s Profile</h1>}
+        {user.username && (
+          <h1 className="text-3xl font-bold my-8">{user.username}'s Profile</h1>
+        )}
+        <div className="border-2">
+        <h5>Profile Information:</h5>
+          <div>
+            <h6 className="text-xl font-semibold">Username:</h6>
+            <p className="text-lg">{user.username}</p>
+          </div>
+          <div>
+            <h6 className="text-xl font-semibold">Email:</h6>
+            <p className="text-lg">{user.email}</p>
+          </div>
+        </div>
         <h1 className="text-3xl font-bold my-8">Items</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-2 p-4">
           {items.length > 0 ? (
             items.map((item) => (
               <ItemCard
@@ -63,16 +76,14 @@ const ProfilePage = () => {
           )}
         </div>
         <h1 className="text-3xl font-bold my-8">Swap Requests</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-2 p-4">
           {swaps.length > 0 ? (
             swaps.map((request) => (
               <SwapCard key={request._id} request={request} />
             ))
           ) : (
             <div className="w-full text-center text-gray-600 text-xl">
-              <p>
-                No swap requests found.
-              </p>
+              <p>No swap requests found.</p>
             </div>
           )}
         </div>

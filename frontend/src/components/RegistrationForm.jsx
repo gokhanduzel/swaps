@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { register } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const RegistrationForm = () => {
   const dispatch = useDispatch();
@@ -41,13 +42,10 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h2 className="mb-8 text-2xl font-bold text-gray-700">
-        Registration Form
-      </h2>
+    <div className="bg-white rounded-lg shadow-lg p-8 w-5/6 md:w-1/2">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+        className="space-y-6"
       >
         <div className="mb-4">
           <label
@@ -82,6 +80,7 @@ const RegistrationForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="swappy@email.com"
           />
         </div>
         <div className="mb-4">
@@ -110,7 +109,7 @@ const RegistrationForm = () => {
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-            type="repassword"
+            type="password"
             id="repassword"
             name="repassword"
             value={repassword}
@@ -118,15 +117,24 @@ const RegistrationForm = () => {
             required
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="py-2 px-11 bg-purple-400 text-white rounded-2xl font-semibold shadow transition duration-300 hover:bg-purple-500 hover:text-white border-2 border-gray-800"
             type="submit"
           >
             Register
           </button>
         </div>
       </form>
+      <div className="text-md font-medium text-gray-700 mt-6 text-center">
+        Already have an account?{" "}
+        <Link
+          to="/login"
+          className="text-teal-500 hover:underline"
+        >
+          Login
+        </Link>
+      </div>
     </div>
   );
 };

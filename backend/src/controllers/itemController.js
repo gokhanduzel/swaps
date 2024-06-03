@@ -27,13 +27,25 @@ export const createItem = asyncHandler(async (req, res) => {
     throw new Error("Missing required fields");
   }
 
+  // Parse tags and desiredItems
+  let parsedTags = [];
+  let parsedDesiredItems = [];
+
+  try {
+    parsedTags = JSON.parse(tags);
+    parsedDesiredItems = JSON.parse(desiredItems);
+  } catch (error) {
+    res.status(400);
+    throw new Error("Invalid tags or desiredItems format");
+  }
+
   const item = new Item({
     ownerId: req.user._id,
     title,
     description,
     images,
-    tags,
-    desiredItems,
+    tags: parsedTags,
+    desiredItems: parsedDesiredItems,
     visible,
   });
 
