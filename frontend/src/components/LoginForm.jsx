@@ -18,7 +18,6 @@ const LoginForm = () => {
         alert("Logged in successfully");
         navigate("/");
       } else {
-        console.log(resultAction);
         if (resultAction.payload) {
           alert(`Login failed: ${resultAction.payload.message}`);
         } else {

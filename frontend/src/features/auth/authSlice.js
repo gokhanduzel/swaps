@@ -45,10 +45,15 @@ export const register = createAsyncThunk(
 
 export const refresh = createAsyncThunk(
   "auth/refresh",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
-      await axios.post(`${BASE_URL}/refresh`);
-      return null; // Return null as the token is stored in HTTP-only cookies
+      const response = await axios.post(`${BASE_URL}/refresh`);
+      if (response.status === 200) {
+        dispatch(setUser(response.data.user)); // Update the user in the state
+        return response.data.user;
+      } else {
+        return rejectWithValue("Failed to refresh token");
+      }
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -78,7 +83,16 @@ const initialState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
+    clearUser: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(login.pending, (state) => {
@@ -122,29 +136,23 @@ const authSlice = createSlice({
         state.status = "loading";
       })
       .addCase(refresh.fulfilled, (state, action) => {
-        state.status = "succeeded";
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
       })
       .addCase(refresh.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      .addCase(checkAuth.pending, (state) => {
-        state.status = "loading";
-        state.loading = true;
+        state.error = action.payload.message;
+        state.isAuthenticated = false;
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.user = action.payload.user;
-        state.loading = false;
         state.isAuthenticated = true;
       })
       .addCase(checkAuth.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-        state.loading = false;
+        state.error = action.payload.message;
         state.isAuthenticated = false;
       });
   },
 });
 
+export const { setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;

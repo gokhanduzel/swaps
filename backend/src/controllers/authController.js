@@ -1,6 +1,7 @@
 import User from "../models/UserModel.js";
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
+import { geocodeAddress } from "../utils/geocode.js";
 
 const generateAccessToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, {
@@ -16,7 +17,7 @@ const generateRefreshToken = (user) => {
 
 // Register User
 export const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, location } = req.body;
   const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
   if (userExists) {
@@ -30,10 +31,23 @@ export const registerUser = asyncHandler(async (req, res) => {
     }
   }
 
+  let locationData = location;
+  if (!location.coordinates || location.coordinates.length === 0) {
+    if (location.address) {
+      locationData = await geocodeAddress(location.address);
+    } else {
+      res
+        .status(400)
+        .json({ message: "Location coordinates or address is required" });
+      return;
+    }
+  }
+
   const user = await User.create({
     username,
     email,
     passwordHash: password, // This will be hashed by our model's middleware
+    location: locationData,
   });
 
   if (user) {
@@ -113,7 +127,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 900000, // 15 minutes
     });
-    res.status(200).json({ message: "Token refreshed" });
+    res.status(200).json({ message: "Token refreshed", user: user });
   } catch (error) {
     res.status(403).json({ message: "Invalid token" });
   }
@@ -124,8 +138,7 @@ export const checkAuth = asyncHandler(async (req, res) => {
   try {
     const user = req.user;
     if (!user) {
-      res.status(404);
-      throw new Error("User not found");
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json({
@@ -133,7 +146,6 @@ export const checkAuth = asyncHandler(async (req, res) => {
       user,
     });
   } catch (error) {
-    res.status(401);
-    throw new Error("Not authorized, token failed");
+    res.status(401).json({ message: "Not authorized, token failed" });
   }
 });

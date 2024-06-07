@@ -132,3 +132,18 @@ export const declineSwapRequest = asyncHandler(async (req, res) => {
 
   res.status(200).json(swap);
 });
+
+// Delete Swap Request by ID
+export const deleteSwapRequest = asyncHandler(async (req, res) => {
+  try   {
+    const swap = await Swap.findById(req.params.id);
+    if (!swap) {
+      return res.status(404).json({ message: "Swap request not found" });
+    }
+    await Swap.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Swap request deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting swap request:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+});

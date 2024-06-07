@@ -12,8 +12,12 @@ import { persistor } from "./app/store";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { PersistGate } from "redux-persist/integration/react";
 import TokenRefresher from "./components/TokenRefresher";
+import useInactivityTimeout from "./hooks/useInactivityTimeout";
 
 function App() {
+
+  // useInactivityTimeout();
+  
   return (
     <PersistGate loading={null} persistor={persistor}>
       <TokenRefresher />

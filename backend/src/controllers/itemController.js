@@ -2,8 +2,8 @@ import Item from "../models/ItemModel.js";
 import User from "../models/UserModel.js";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
-import { s3Client } from '../config/awsConfig.js';
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { s3Client } from "../config/awsConfig.js";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 // Function to delete an image from S3
 const deleteImageFromS3 = async (url) => {
@@ -105,7 +105,8 @@ export const getItemsByUser = asyncHandler(async (req, res) => {
 
 // Update an item by ID
 export const updateItem = asyncHandler(async (req, res) => {
-  const { title, description, tags, desiredItems, visible, removeImages } = req.body;
+  const { title, description, tags, desiredItems, visible, removeImages } =
+    req.body;
   const item = await Item.findById(req.params.id);
 
   if (!item) {
@@ -178,5 +179,57 @@ export const deleteItem = asyncHandler(async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+export const searchItems = asyncHandler(async (req, res) => {
+  const { keyword, location, range } = req.body;
+
+  let itemQuery = { visible: true };
+  let userQuery = {};
+
+  if (keyword) {
+    itemQuery = {
+      ...itemQuery,
+      $or: [
+        { title: new RegExp(keyword, "i") },
+        { description: new RegExp(keyword, "i") },
+        { tags: new RegExp(keyword, "i") },
+      ],
+    };
+  }
+
+  if (location && location.coordinates.length === 2) {
+    userQuery = {
+      ...userQuery,
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: location.coordinates,
+          },
+          $maxDistance: range || 10000, // Default range is 10 km
+        },
+      },
+    };
+  }
+
+  try {
+    const users = await User.find(userQuery, "_id");
+    const userIds = users.map((user) => user._id);
+
+    if (userIds.length > 0) {
+      itemQuery = { ...itemQuery, ownerId: { $in: userIds } };
+    } else {
+      // No users found within the location range
+      return res.json([]);
+    }
+
+    const items = await Item.find(itemQuery);
+    res.json(items);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error searching items", error: error.message });
   }
 });

@@ -7,6 +7,7 @@ import {
   getItemsByUser,
   updateItem,
   deleteItem,
+  searchItems
 } from "../controllers/itemController.js";
 import { authenticate } from '../middlewares/authMiddleware.js';
 import { upload, uploadFilesMiddleware } from '../middlewares/upload.js';
@@ -27,6 +28,9 @@ router.get("/getitems", getItems);
 
 // Route to get all items with visible set to true
 router.get("/getvisibleitems", getVisibleItems);
+
+// Route to get all the filtered visible items
+router.post('/search', searchItems);
 
 // Route to get a single item by ID
 router.get("/getitem/:id", authenticate, getItem);

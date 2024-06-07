@@ -1,22 +1,21 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { refresh } from "../features/auth/authSlice";
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { refresh } from '../features/auth/authSlice';
 
 const TokenRefresher = () => {
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (!user) return;
+    useEffect(() => {
+        // Set up the interval
+        const interval = setInterval(() => {
+            dispatch(refresh());
+        }, 900000); // Refresh every 15 minutes
 
-    const interval = setInterval(() => {
-      dispatch(refresh());
-    }, 840000); // 14 minutes
+        // Clear the interval on component unmount
+        return () => clearInterval(interval);
+    }, [dispatch]);
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [dispatch, user]);
-
-  return null; // This component doesn't render anything
+    return null; // This component does not render anything
 };
 
 export default TokenRefresher;

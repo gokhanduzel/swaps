@@ -6,6 +6,7 @@ import authReducer from "../features/auth/authSlice";
 import itemReducer from "../features/item/itemSlice";
 import swapsReducer from "../features/swaps/swapsSlice";
 import chatsReducer from "../features/chats/chatsSlice";
+import userReducer from "../features/user/userSlice";
 
 // Combine reducers
 const rootReducer = combineReducers({
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   item: itemReducer,
   swaps: swapsReducer,
   chats: chatsReducer,
+  user: userReducer,
 });
 
 // Persist configuration

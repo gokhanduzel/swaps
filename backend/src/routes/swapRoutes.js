@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSwapRequest, getSwapRequests, updateSwapRequest, acceptSwapRequest, declineSwapRequest } from '../controllers/swapController.js';
+import { createSwapRequest, getSwapRequests, updateSwapRequest, acceptSwapRequest, declineSwapRequest, deleteSwapRequest } from '../controllers/swapController.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -9,6 +9,8 @@ router.post('/createswap', authenticate, createSwapRequest);
 
 // Route to update a swap request by ID
 router.put('/updateswap/:id', authenticate, updateSwapRequest);
+
+router.delete('/deleteswap/:id', authenticate, deleteSwapRequest);
 
 router.route('/acceptswap/:swapId').put(authenticate, acceptSwapRequest);
 

@@ -40,6 +40,18 @@ export const getVisibleItems = createAsyncThunk(
   }
 );
 
+export const searchItems = createAsyncThunk(
+  "items/searchItems",
+  async (searchCriteria, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/search`, searchCriteria);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const getItem = createAsyncThunk(
   "items/getItem",
   async (itemId, { rejectWithValue }) => {
@@ -143,6 +155,18 @@ const itemSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      // Handle searchItems
+      .addCase(searchItems.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(searchItems.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.visibleItems = action.payload;
+      })
+      .addCase(searchItems.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
       .addCase(getItem.pending, (state) => {
         state.status = "loading";
       })
@@ -183,10 +207,7 @@ const itemSlice = createSlice({
           state.visibleItems,
           (item) => item.visible
         );
-        state.userItems = updateItems(
-          state.userItems,
-          (item) => item.userId
-        );
+        state.userItems = updateItems(state.userItems, (item) => item.userId);
 
         state.status = "succeeded";
       })
@@ -199,15 +220,11 @@ const itemSlice = createSlice({
       })
       .addCase(deleteItem.fulfilled, (state, action) => {
         const itemId = action.payload.itemId;
-        state.allItems = state.allItems.filter(
-          (item) => item._id !== itemId
-        );
+        state.allItems = state.allItems.filter((item) => item._id !== itemId);
         state.visibleItems = state.visibleItems.filter(
           (item) => item._id !== itemId
         );
-        state.userItems = state.userItems.filter(
-          (item) => item._id !== itemId
-        );
+        state.userItems = state.userItems.filter((item) => item._id !== itemId);
         state.status = "succeeded";
       })
       .addCase(deleteItem.rejected, (state, action) => {

@@ -30,7 +30,6 @@ const SwapRequestContent = ({ item, onSubmit, onClose }) => {
       message,
     };
     onSubmit(swapRequestData);
-    onClose();
   };
 
   return (
@@ -57,8 +56,8 @@ const SwapRequestContent = ({ item, onSubmit, onClose }) => {
           {userItems.map((userItem) => (
             <div
               key={userItem._id}
-              className={`border p-2 rounded cursor-pointer ${
-                selectedItemId === userItem._id ? "border-blue-500" : ""
+              className={`border-4 p-2 rounded-xl cursor-pointer ${
+                selectedItemId === userItem._id ? "border-teal-500" : ""
               }`}
               onClick={() => setSelectedItemId(userItem._id)}
             >
@@ -77,16 +76,22 @@ const SwapRequestContent = ({ item, onSubmit, onClose }) => {
       </div>
       <div>
         <label className="block text-gray-700">Message:</label>
-        <textarea
-          placeholder="Your message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        ></textarea>
+        <div className="relative">
+          <textarea
+            placeholder="Your message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={100}
+            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+          ></textarea>
+          <span className="absolute right-2 bottom-2 text-gray-400 text-xs">
+            {message.length}/100
+          </span>
+        </div>
       </div>
       <button
         type="submit"
-        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full bg-indigo-500 hover:bg-indigo-700 transition duration-300 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
       >
         Send Request
       </button>

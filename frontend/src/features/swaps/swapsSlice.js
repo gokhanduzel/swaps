@@ -1,4 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  createSelector,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 
 axios.defaults.withCredentials = true;
@@ -67,8 +71,21 @@ export const declineSwap = createAsyncThunk(
   }
 );
 
+export const deleteSwap = createAsyncThunk(
+  "swaps/deleteSwap",
+  async (swapId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`${BASE_URL}/deleteswap/${swapId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const initialState = {
   swaps: [],
+  chats: {},
   status: "idle",
   error: null,
 };
@@ -119,7 +136,6 @@ const swapsSlice = createSlice({
       })
       .addCase(acceptSwap.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Update the swap details in your state
         state.swaps = state.swaps.map((swap) =>
           swap._id === action.payload._id ? action.payload : swap
         );
@@ -140,8 +156,46 @@ const swapsSlice = createSlice({
       .addCase(declineSwap.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+      .addCase(deleteSwap.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteSwap.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.swaps = state.swaps.filter(
+          (swap) => swap._id !== action.meta.arg
+        );
+      })
+      .addCase(deleteSwap.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });
+
+// Selectors
+const selectSwaps = (state) => state.swaps.swaps;
+
+// Memoized selectors
+export const selectReceivedSwaps = createSelector(
+  [selectSwaps, (state, userId) => userId],
+  (swaps, userId) =>
+    swaps.filter((swap) => swap.user2Id === userId && swap.status === "pending")
+);
+
+export const selectSentSwaps = createSelector(
+  [selectSwaps, (state, userId) => userId],
+  (swaps, userId) =>
+    swaps.filter((swap) => swap.user1Id === userId && swap.status === "pending")
+);
+
+export const selectAcceptedSwaps = createSelector([selectSwaps], (swaps) =>
+  swaps.filter((swap) => swap.status === "accepted")
+);
+
+export const selectChatMessagesByChatId = createSelector(
+  [(state) => state.swaps.chats, (state, chatId) => chatId],
+  (chats, chatId) => chats[chatId]?.messages || []
+);
 
 export default swapsSlice.reducer;

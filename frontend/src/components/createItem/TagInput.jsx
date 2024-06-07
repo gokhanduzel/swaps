@@ -23,7 +23,7 @@ const TagInput = ({ tags, setTags }) => {
           className="block text-lg font-medium text-gray-700"
           htmlFor="tags"
         >
-          *Tags:
+          Tags:
         </label>
         <div className="relative">
           <input
@@ -31,7 +31,6 @@ const TagInput = ({ tags, setTags }) => {
             type="text"
             id="tags"
             value={currentTag}
-            required
             maxLength={15}
             onChange={(e) => setCurrentTag(e.target.value)}
           />
