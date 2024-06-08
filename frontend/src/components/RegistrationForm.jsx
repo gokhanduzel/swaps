@@ -4,6 +4,7 @@ import { register } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import loadGoogleMapsScript from "../utils/loadGoogleMapsScript";
 
 const RegistrationForm = () => {
   const dispatch = useDispatch();
@@ -17,26 +18,30 @@ const RegistrationForm = () => {
   const addressInputRef = useRef(null);
 
   useEffect(() => {
-    if (window.google && window.google.maps && addressInputRef.current) {
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        addressInputRef.current,
-        {
-          types: ["geocode"],
-        }
-      );
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          setAddress(place.formatted_address);
-          setCoordinates({
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          });
-        }
-      });
-    } else {
-      console.error("Google Maps API not loaded or address input ref not set.");
-    }
+    loadGoogleMapsScript(() => {
+      if (window.google && window.google.maps && addressInputRef.current) {
+        const autocomplete = new window.google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            types: ["geocode"],
+          }
+        );
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.geometry) {
+            setAddress(place.formatted_address);
+            setCoordinates({
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            });
+          }
+        });
+      } else {
+        console.error(
+          "Google Maps API not loaded or address input ref not set."
+        );
+      }
+    });
   }, []);
 
   const handleSubmit = async (e) => {

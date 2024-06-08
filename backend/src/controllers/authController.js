@@ -15,6 +15,16 @@ const generateRefreshToken = (user) => {
   });
 };
 
+// Get user profile
+export const getUserData = async (req, res) => {
+  const userId = req.params.userId;
+  const user = await User.findById(userId).select("-passwordHash"); // Exclude sensitive data
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  res.json(user);
+};
+
 // Register User
 export const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, location } = req.body;

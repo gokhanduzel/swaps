@@ -4,11 +4,15 @@ import {
   loginUser,
   logoutUser,
   refreshToken,
-  checkAuth
+  checkAuth,
+  getUserData
 } from '../controllers/authController.js';
 import { authenticate } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// Get a user profile
+router.get('/getuserdata/:userId', authenticate, getUserData);
 
 // Register a new user
 router.post('/register', registerUser);
@@ -24,5 +28,6 @@ router.post('/refresh', refreshToken);
 
 // Check if the user is authenticated
 router.get('/checkauth', authenticate, checkAuth);
+
 
 export default router;

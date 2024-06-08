@@ -4,19 +4,18 @@ import ItemCard from "../components/ItemCard";
 import { getItemsByUser, deleteItem } from "../features/item/itemSlice";
 import { getSwaps } from "../features/swaps/swapsSlice";
 import SwapCard from "../components/SwapCard";
-import {
-  fetchUserProfile,
-  updateUserProfile,
-} from "../features/user/userSlice";
+import { getUserData } from "../features/auth/authSlice";
 import axios from "axios";
+import loadGoogleMapsScript from "../utils/loadGoogleMapsScript";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const items = useSelector((state) => state.item.userItems);
   const swaps = useSelector((state) => state.swaps.swaps);
-  const user = useSelector((state) => state.user?.user);
-  const userId = useSelector((state) => state.auth.user?.user?._id);
-  const userStatus = useSelector((state) => state.user.status);
+  const userId = useSelector((state) => state.auth.user?._id);
+  const user = useSelector((state) => state.auth.user);
+  const userStatus = useSelector((state) => state.auth.status);
+  console.log("User:", user);
 
   const [activeParentTab, setActiveParentTab] = useState("items");
   const [activeTab, setActiveTab] = useState("received");
@@ -41,7 +40,7 @@ const ProfilePage = () => {
       try {
         await dispatch(getItemsByUser(userId));
         await dispatch(getSwaps(userId));
-        await dispatch(fetchUserProfile(userId));
+        await dispatch(getUserData(userId));
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -65,26 +64,28 @@ const ProfilePage = () => {
 
   // Handling Google Maps API setup
   useEffect(() => {
-    if (!window.google || !window.google.maps || !addressInputRef.current) {
-      console.log("Google Maps API not loaded or address input ref not set.");
-      return;
-    }
-    const autocomplete = new window.google.maps.places.Autocomplete(
-      addressInputRef.current,
-      { types: ["geocode"] }
-    );
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (place.geometry) {
-        setFormData((prevData) => ({
-          ...prevData,
-          location: place.formatted_address,
-          coordinates: {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          },
-        }));
+    loadGoogleMapsScript(() => {
+      if (!window.google || !window.google.maps || !addressInputRef.current) {
+        console.log("Google Maps API not loaded or address input ref not set.");
+        return;
       }
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        addressInputRef.current,
+        { types: ["geocode"] }
+      );
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          setFormData((prevData) => ({
+            ...prevData,
+            location: place.formatted_address,
+            coordinates: {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            },
+          }));
+        }
+      });
     });
   }, [user]);
 
@@ -202,7 +203,7 @@ const ProfilePage = () => {
         if (!updateUserProfile.fulfilled.match(response)) {
           throw new Error("Failed to update user profile");
         }
-        await dispatch(fetchUserProfile(userId));
+        await dispatch(getUserData(userId));
       } catch (error) {
         console.error("Error updating user profile:", error);
       }
@@ -272,7 +273,7 @@ const ProfilePage = () => {
   return (
     <section className="min-h-screen bg-gradient-to-r from-teal-400 to-blue-400 flex flex-col items-center pt-32 pb-32">
       {user.username && (
-        <h1 className="text-center text-5xl font-bold mt-8 mb-16 animate-fadeIn drop-shadow-tealGlow text-white bg-opacity-30 bg-black px-8 py-4 rounded-xl w-5/">
+        <h1 className="text-center text-5xl font-bold mt-8 mb-16 animate-fadeIn drop-shadow-tealGlow text-white bg-opacity-30 bg-black px-8 py-4 rounded-xl w-5/6">
           {user.username}'s Profile
         </h1>
       )}
@@ -424,7 +425,7 @@ const ProfilePage = () => {
           <h1 className="text-3xl font-bold my-8 text-white drop-shadow-whiteGlow">
             My Items
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {items.length > 0 ? (
               items.map((item) => (
                 <ItemCard

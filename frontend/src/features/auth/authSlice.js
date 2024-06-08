@@ -4,6 +4,18 @@ import axios from "axios";
 axios.defaults.withCredentials = true;
 const BASE_URL = "http://localhost:5001/api/auth";
 
+export const getUserData = createAsyncThunk(
+  "auth/getUserData",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/getuserdata/${userId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
@@ -45,12 +57,17 @@ export const register = createAsyncThunk(
 
 export const refresh = createAsyncThunk(
   "auth/refresh",
-  async (_, { rejectWithValue, dispatch }) => {
+  async (_, { rejectWithValue, dispatch, getState }) => {
     try {
       const response = await axios.post(`${BASE_URL}/refresh`);
       if (response.status === 200) {
-        dispatch(setUser(response.data.user)); // Update the user in the state
-        return response.data.user;
+        const state = getState();
+        const userId = state.auth.user?._id;
+        const userResponse = await axios.get(
+          `${BASE_URL}/getuserdata/${userId}`
+        );
+        dispatch(setUser(userResponse.data)); // Update the user in the state
+        return userResponse.data;
       } else {
         return rejectWithValue("Failed to refresh token");
       }
@@ -95,6 +112,17 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getUserData.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getUserData.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload;
+      })
+      .addCase(getUserData.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
       .addCase(login.pending, (state) => {
         state.status = "loading";
       })
@@ -136,11 +164,13 @@ const authSlice = createSlice({
         state.status = "loading";
       })
       .addCase(refresh.fulfilled, (state, action) => {
-        state.user = action.payload.user;
+        state.status = "succeeded";
+        state.user = action.payload;
         state.isAuthenticated = true;
       })
       .addCase(refresh.rejected, (state, action) => {
-        state.error = action.payload.message;
+        state.status = "failed";
+        state.error = action.payload;
         state.isAuthenticated = false;
       })
       .addCase(checkAuth.fulfilled, (state, action) => {

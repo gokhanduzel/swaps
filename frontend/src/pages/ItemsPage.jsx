@@ -4,6 +4,7 @@ import ItemCard from "../components/ItemCard";
 import { getVisibleItems, searchItems } from "../features/item/itemSlice";
 import "../index.css";
 import { FaArrowAltCircleUp } from "react-icons/fa";
+import loadGoogleMapsScript from "../utils/loadGoogleMapsScript";
 
 const ItemsPage = () => {
   const dispatch = useDispatch();
@@ -20,26 +21,32 @@ const ItemsPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (window.google) {
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        addressInputRef.current,
-        {
-          types: ["geocode"],
-        }
-      );
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          setLocation({
-            address: place.formatted_address,
-            coordinates: [
-              place.geometry.location.lng(),
-              place.geometry.location.lat(),
-            ],
-          });
-        }
-      });
-    }
+    loadGoogleMapsScript(() => {
+      if (window.google && window.google.maps && addressInputRef.current) {
+        const autocomplete = new window.google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            types: ["geocode"],
+          }
+        );
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.geometry) {
+            setLocation({
+              address: place.formatted_address,
+              coordinates: [
+                place.geometry.location.lng(),
+                place.geometry.location.lat(),
+              ],
+            });
+          }
+        });
+      } else {
+        console.error(
+          "Google Maps API not loaded or address input ref not set."
+        );
+      }
+    });
   }, []);
 
   useEffect(() => {
