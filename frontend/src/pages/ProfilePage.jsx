@@ -12,7 +12,7 @@ const ProfilePage = () => {
   const dispatch = useDispatch();
   const items = useSelector((state) => state.item.userItems);
   const swaps = useSelector((state) => state.swaps.swaps);
-  const userId = useSelector((state) => state.auth.user?._id);
+  const userId = useSelector((state) => state.auth.user?.user?._id);
   const user = useSelector((state) => state.auth.user);
   const userStatus = useSelector((state) => state.auth.status);
   console.log("User:", user);
@@ -212,7 +212,8 @@ const ProfilePage = () => {
     setEditMode({ ...editMode, [field]: false });
   };
 
-  if (userStatus === "loading" || !userId) {
+  console.log(`userStatus: ${userStatus} userId: ${userId}`);
+  if (userStatus === "loading" || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-r from-teal-400 to-blue-400 flex flex-col items-center pt-32 pb-32">
         <div role="status">
@@ -425,19 +426,21 @@ const ProfilePage = () => {
           <h1 className="text-3xl font-bold my-8 text-white drop-shadow-whiteGlow">
             My Items
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div>
             {items.length > 0 ? (
-              items.map((item) => (
-                <ItemCard
-                  key={item._id}
-                  item={item}
-                  isProfilePage={true}
-                  handleDelete={handleDelete}
-                  handleUpdate={handleUpdate}
-                />
-              ))
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {items.map((item) => (
+                  <ItemCard
+                    key={item._id}
+                    item={item}
+                    isProfilePage={true}
+                    handleDelete={handleDelete}
+                    handleUpdate={handleUpdate}
+                  />
+                ))}
+              </div>
             ) : (
-              <div className="w-full text-center text-gray-600 text-xl">
+              <div className="flex justify-center items-center w-full text-gray-600 text-xl h-64">
                 <p>
                   No item listings found. Try adjusting your filters or check
                   back later.
